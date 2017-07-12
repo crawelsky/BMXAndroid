@@ -9,10 +9,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 import bmx.fablab.ubo.bmxsmartpanel.ServeurApplication.Client;
@@ -29,34 +32,35 @@ public class Login extends AppCompatActivity {
     public static Socket socket;
     private Connexion connexionTask;
     private Client clientTask;
-    private PrintWriter out = null;
+    public static Thread threadReception;
     private BufferedReader in = null;
     /* Autres */
     private Dialog dialog;
     private TextView info_view;
     private Button connect_button;
-    private EditText login_edit;
-    private EditText pass_edit;
+    private EditText ident_edit;
+    private String login;
+    private String pass;
+    private String ipserver;
+    private String ident;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        getSupportActionBar().hide();
         info_view = (TextView) findViewById(R.id.info_view);
         connect_button = (Button) findViewById(R.id.connect_button);
-        login_edit = (EditText) findViewById(R.id.login_edit);
-        login_edit.setText("log");
-        pass_edit = (EditText) findViewById(R.id.pass_edit);
-        pass_edit.setText("pwd");
+        ident_edit = (EditText) findViewById(R.id.ident_edit);
+        ident_edit.setText("Jean");
         dialog = ProgressDialog.show(this, "Information", "Patienter s'il vous plaît...");
         dialog.dismiss();
         connect_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!login_edit.getText().toString().isEmpty() || !pass_edit.getText().toString().isEmpty()) {
-                    clientTask = new Client(Login.this);
-                    clientTask.execute();
-                    dialog.show();
+                if(!ident_edit.getText().toString().isEmpty() ) {
+                    ident = ident_edit.getText().toString();
+                    new IntentIntegrator(Login.this).initiateScan();
                 }else{
                     info_view.setText("Login ou mot de passe non saisie !");
                 }
@@ -64,10 +68,28 @@ public class Login extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if(result != null) {
+            if(result.getContents() == null) {
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
+                getServerInformation(result.getContents());
+                clientTask = new Client(this, ipserver);
+                clientTask.execute();
+                dialog.show();
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
     public void clientTaskComplete(Socket s){
         socket = s;
         if(socket.isConnected()){
-            connexionTask = new Connexion(socket, Login.this, login_edit.getText().toString(), pass_edit.getText().toString());
+            connexionTask = new Connexion(socket, Login.this, login, pass, ident);
             connexionTask.execute();
         }else {
             info_view.setText("Aucun serveur n'est à l'écoute du port : " + Client.SERVERPORT);
@@ -79,14 +101,13 @@ public class Login extends AppCompatActivity {
     public void connexionTaskComplete(boolean data) {
         dialog.dismiss();
         if (data) {
-            SocketHandler.setSocket(socket);
             try {
-                out = new PrintWriter(socket.getOutputStream());
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                Thread t = new Thread(new Reception(socket, in));
-                t.setDaemon(true);
-                t.start();
+                threadReception = new Thread(new Reception(in));
+                threadReception.setDaemon(true);
+                threadReception.start();
                 Intent i = new Intent(Login.this, MainActivity.class);
+                i.putExtra("id", ident_edit.getText());
                 startActivity(i);
                 finish();
             }catch (Exception e){
@@ -98,16 +119,16 @@ public class Login extends AppCompatActivity {
         connexionTask.cancel(true);
     }
 
-    static public class SocketHandler {
-        private static Socket socket;
 
-        public static synchronized Socket getSocket(){
-            return socket;
-        }
+    public void getServerInformation(String qrCode){
+        String result[] = qrCode.split("-", -1);
+        login = result[0];
+        pass = result[1];
+        ipserver = result[2];
+    }
 
-        public static synchronized void setSocket(Socket socket){
-            SocketHandler.socket = socket;
-        }
+    public static Socket getSocket(){
+        return socket;
     }
 }
 

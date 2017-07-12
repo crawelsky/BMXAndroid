@@ -5,7 +5,6 @@ import android.os.Message;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.Socket;
 
 import bmx.fablab.ubo.bmxsmartpanel.MainActivity;
 
@@ -17,16 +16,14 @@ import bmx.fablab.ubo.bmxsmartpanel.MainActivity;
 
 public class Reception implements Runnable {
 
-    private Socket socket;
     private BufferedReader in;
     public static String message = null;
-    public Reception(Socket socket, BufferedReader in){
+    public Reception(BufferedReader in){
         this.in = in;
-        this.socket = socket;
     }
 
     public void run() {
-        while(!MainActivity.shutdown){
+        while(true){
             try {
                 message = in.readLine();
             } catch (IOException e) {

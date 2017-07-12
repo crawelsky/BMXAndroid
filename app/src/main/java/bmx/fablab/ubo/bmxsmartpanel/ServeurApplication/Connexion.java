@@ -18,17 +18,19 @@ public class Connexion extends AsyncTask<String, String, Boolean>  {
 
     private String log;
     private String pwd;
+    private String id;
     private Login logActivity;
     private Socket socket = null;
     public static Thread t2;
     private PrintWriter out = null;
     private BufferedReader in = null;
 
-    public Connexion(Socket s, Login logActivity, String log, String pwd){
+    public Connexion(Socket s, Login logActivity, String log, String pwd, String id){
         socket = s;
         this.logActivity = logActivity;
         this.log = log;
         this.pwd = pwd;
+        this.id = id;
     }
 
     @Override
@@ -37,16 +39,16 @@ public class Connexion extends AsyncTask<String, String, Boolean>  {
         try {
             out = new PrintWriter(socket.getOutputStream());
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            // Envoie login
             out.println(log);
             out.flush();
-            // Envoie password;
+            // Envoie password
             out.println(pwd);
             out.flush();
-            if (MainActivity.CONNECTED.equals(in.readLine())) {
-                result = true;
-            } else {
-                System.err.println("Vos informations sont incorrectes ");
-            }
+            //Envoie id
+            out.println(id);
+            out.flush();
+            if (MainActivity.CONNECTED.equals(in.readLine())) result = true;
         }catch (Exception a){
             a.printStackTrace();
         }

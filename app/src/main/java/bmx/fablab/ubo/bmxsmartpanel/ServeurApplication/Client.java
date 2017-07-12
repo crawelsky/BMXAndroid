@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -17,25 +16,24 @@ import bmx.fablab.ubo.bmxsmartpanel.Login;
 public class Client extends AsyncTask<String, String, Socket>{
 
     static public final int SERVERPORT = 5030;
-    static public final String SERVERIP = "10.0.2.2";
+    static public String SERVERIP;
     public Socket socket = null;
     private Login login;
 
-    public Client(Login l){
+    public Client(Login l, String ipserver){
         login = l;
+        SERVERIP = ipserver;
     }
 
     @Override
     protected Socket doInBackground(String... strings) {
         try {
-            InetSocketAddress serverAddr = new InetSocketAddress(SERVERIP, SERVERPORT);
-            socket = new Socket();
-            socket.connect(serverAddr, 3000);
+            socket = new Socket(SERVERIP, SERVERPORT);
             Log.d("Info", "Socket connecter !");
         } catch (UnknownHostException e) {
-            System.err.println("Impossible de se connecter à l'adresse 172.19.240.188" );
+            System.err.println("Impossible de se connecter à l'adresse " + SERVERIP );
         } catch (IOException e) {
-            System.err.println("Aucun serveur à l'écoute du port 5030" );
+            System.err.println("Aucun serveur à l'écoute du port " + SERVERPORT );
         }
         return socket;
     }

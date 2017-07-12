@@ -12,6 +12,7 @@ import android.view.WindowManager;
  */
 
 public class SplashScreen extends AppCompatActivity {
+
     private static int SPLACH_TIMEOUT = 3000;
 
     protected void onCreate(Bundle savedInstanceState){
@@ -23,8 +24,9 @@ public class SplashScreen extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent i = new Intent(SplashScreen.this, Login.class);
-                startActivity(i);
+                Intent log = new Intent(SplashScreen.this, Login.class);
+                //log.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(log);
                 finish();
             }
         }, SPLACH_TIMEOUT);
