@@ -3,6 +3,7 @@ package bmx.fablab.ubo.bmxsmartpanel;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -36,7 +37,7 @@ public class Login extends AppCompatActivity {
     private BufferedReader in = null;
     /* Autres */
     private Dialog dialog;
-    private TextView info_view;
+    private TextView textView2;
     private Button connect_button;
     private EditText ident_edit;
     private String login;
@@ -48,11 +49,17 @@ public class Login extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        getSupportActionBar().hide();
-        info_view = (TextView) findViewById(R.id.info_view);
+        textView2 = (TextView) findViewById(R.id.textView2);
         connect_button = (Button) findViewById(R.id.connect_button);
         ident_edit = (EditText) findViewById(R.id.ident_edit);
-        ident_edit.setText("Jean");
+        try {
+            Typeface typeface = Typeface.createFromAsset(getAssets(), "appleFont/AppleGaramond.ttf");
+            textView2.setTypeface(typeface);
+            ident_edit.setTypeface(typeface);
+            connect_button.setTypeface(typeface);
+        } catch (Exception e) {
+            //Log.e("FONT", fontName + " not found", e);
+        }
         dialog = ProgressDialog.show(this, "Information", "Patienter s'il vous plaît...");
         dialog.dismiss();
         connect_button.setOnClickListener(new View.OnClickListener() {
@@ -62,7 +69,7 @@ public class Login extends AppCompatActivity {
                     ident = ident_edit.getText().toString();
                     new IntentIntegrator(Login.this).initiateScan();
                 }else{
-                    info_view.setText("Login ou mot de passe non saisie !");
+                    Toast.makeText(Login.this, "Login ou mot de passe non saisie !", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -73,13 +80,17 @@ public class Login extends AppCompatActivity {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if(result != null) {
             if(result.getContents() == null) {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Aucun code flashé !", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
-                getServerInformation(result.getContents());
-                clientTask = new Client(this, ipserver);
-                clientTask.execute();
-                dialog.show();
+                if(result.getContents().contains("-")
+                        && result.getContents().length() > 10) {
+                    getServerInformation(result.getContents());
+                    clientTask = new Client(this, ipserver);
+                    clientTask.execute();
+                    dialog.show();
+                }else{
+                    Toast.makeText(this, "Le QrCode scanné n'est pas valide !", Toast.LENGTH_LONG).show();
+                }
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -88,11 +99,11 @@ public class Login extends AppCompatActivity {
 
     public void clientTaskComplete(Socket s){
         socket = s;
-        if(socket.isConnected()){
+        if(s != null){
             connexionTask = new Connexion(socket, Login.this, login, pass, ident);
             connexionTask.execute();
         }else {
-            info_view.setText("Aucun serveur n'est à l'écoute du port : " + Client.SERVERPORT);
+            Toast.makeText(Login.this, "Aucun serveur n'est à l'écoute du port : " + Client.SERVERPORT, Toast.LENGTH_LONG).show();
             dialog.dismiss();
         }
         clientTask.cancel(true);
@@ -114,7 +125,7 @@ public class Login extends AppCompatActivity {
                 e.printStackTrace();
             }
         } else{
-            info_view.setText("Login ou mot de passe non valide !");
+            Toast.makeText(Login.this, "Login ou mot de passe non valide !", Toast.LENGTH_LONG).show();
         }
         connexionTask.cancel(true);
     }
@@ -130,5 +141,6 @@ public class Login extends AppCompatActivity {
     public static Socket getSocket(){
         return socket;
     }
+
 }
 

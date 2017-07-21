@@ -19,6 +19,7 @@ public class Emission extends AsyncTask<String, String, Boolean> {
     private PrintWriter out;
     private MainActivity main;
     private String message;
+
     public Emission(PrintWriter out, MainActivity m, String msg) {
         this.out = out;
         main = m;

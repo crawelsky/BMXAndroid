@@ -17,6 +17,7 @@ import bmx.fablab.ubo.bmxsmartpanel.MainActivity;
 public class Reception implements Runnable {
 
     private BufferedReader in;
+    public static String id = null;
     public static String message = null;
     public Reception(BufferedReader in){
         this.in = in;
@@ -25,18 +26,16 @@ public class Reception implements Runnable {
     public void run() {
         while(true){
             try {
+                id = in.readLine();
                 message = in.readLine();
-            } catch (IOException e) {
-                message = null;
-                e.printStackTrace();
-            }
-            if(message != null){
                 Message msg = Message.obtain();
                 Bundle bd = new Bundle();
+                bd.putString("id", id);
                 bd.putString("msg", message);
                 msg.setData(bd);
                 MainActivity.messageHandler.sendMessage(msg);
-                message = null;
+            } catch (IOException e) {
+                //e.printStackTrace();
             }
         }
     }
