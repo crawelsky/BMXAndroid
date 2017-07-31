@@ -12,8 +12,6 @@ import java.io.PrintWriter;
 import bmx.fablab.ubo.bmxsmartpanel.Login;
 import bmx.fablab.ubo.bmxsmartpanel.MainActivity;
 
-import static bmx.fablab.ubo.bmxsmartpanel.MainActivity.STOPCLIENT;
-
 public class Emission extends AsyncTask<String, String, Boolean> {
 
     private PrintWriter out;
@@ -30,7 +28,7 @@ public class Emission extends AsyncTask<String, String, Boolean> {
     protected Boolean doInBackground(String... strings) {
         out.println(message);
         out.flush();
-        if(STOPCLIENT.equals(message)){
+        if(MainActivity.STOPCLIENT.equals(message)){
             try {
                 Login.getSocket().close();
             } catch (IOException e) {

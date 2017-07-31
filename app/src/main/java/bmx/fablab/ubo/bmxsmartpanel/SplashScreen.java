@@ -18,6 +18,8 @@ public class SplashScreen extends AppCompatActivity {
     private static int SPLACH_TIMEOUT = 3000;
 
     private TextView textView;
+
+
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);

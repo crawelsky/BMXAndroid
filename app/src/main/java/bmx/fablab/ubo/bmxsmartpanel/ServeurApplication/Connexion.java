@@ -8,7 +8,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import bmx.fablab.ubo.bmxsmartpanel.Login;
-import bmx.fablab.ubo.bmxsmartpanel.MainActivity;
 
 /**
  * Created by didi on 22/06/17.
@@ -48,7 +47,8 @@ public class Connexion extends AsyncTask<String, String, Boolean>  {
             //Envoie id
             out.println(id);
             out.flush();
-            if (MainActivity.CONNECTED.equals(in.readLine())) result = true;
+            System.out.println(Login.CONNECTED);
+            if (Login.CONNECTED.equals(in.readLine())) result = true;
         }catch (Exception a){
             a.printStackTrace();
         }

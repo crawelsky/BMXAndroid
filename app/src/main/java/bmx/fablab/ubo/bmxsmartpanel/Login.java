@@ -1,11 +1,15 @@
 package bmx.fablab.ubo.bmxsmartpanel;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,6 +26,7 @@ import java.net.Socket;
 import bmx.fablab.ubo.bmxsmartpanel.ServeurApplication.Client;
 import bmx.fablab.ubo.bmxsmartpanel.ServeurApplication.Connexion;
 import bmx.fablab.ubo.bmxsmartpanel.ServeurApplication.Reception;
+import bmx.fablab.ubo.bmxsmartpanel.Utilitaires.Property;
 
 /**
  * Created by root on 23/06/17.
@@ -29,6 +34,7 @@ import bmx.fablab.ubo.bmxsmartpanel.ServeurApplication.Reception;
 
 public class Login extends AppCompatActivity {
 
+    final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
     /* Objets Réseaux */
     public static Socket socket;
     private Connexion connexionTask;
@@ -44,6 +50,10 @@ public class Login extends AppCompatActivity {
     private String pass;
     private String ipserver;
     private String ident;
+    /* Constants */
+    private Property property;
+    public static String CONNECTED;
+    public static String ALREADY_CONNECTED;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +62,7 @@ public class Login extends AppCompatActivity {
         textView2 = (TextView) findViewById(R.id.textView2);
         connect_button = (Button) findViewById(R.id.connect_button);
         ident_edit = (EditText) findViewById(R.id.ident_edit);
+        property = new Property(this, "prop.properties");
         try {
             Typeface typeface = Typeface.createFromAsset(getAssets(), "appleFont/AppleGaramond.ttf");
             textView2.setTypeface(typeface);
@@ -65,14 +76,32 @@ public class Login extends AppCompatActivity {
         connect_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int hasWriteContactsPermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_CODE_ASK_PERMISSIONS);
+                    return;
+                }
+                loadProperty();
                 if(!ident_edit.getText().toString().isEmpty() ) {
                     ident = ident_edit.getText().toString();
+                    int permission = checkSelfPermission(Manifest.permission.CAMERA);
+                    if (permission != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[] {Manifest.permission.CAMERA},
+                                REQUEST_CODE_ASK_PERMISSIONS);
+                        return;
+                    }
                     new IntentIntegrator(Login.this).initiateScan();
                 }else{
                     Toast.makeText(Login.this, "Login ou mot de passe non saisie !", Toast.LENGTH_LONG).show();
                 }
             }
         });
+    }
+
+    private void loadProperty() {
+            CONNECTED = property.getProperty("CONNECTED");
+            ALREADY_CONNECTED = property.getProperty("ALREADY_CONNECTED");
     }
 
     @Override
@@ -83,7 +112,8 @@ public class Login extends AppCompatActivity {
                 Toast.makeText(this, "Aucun code flashé !", Toast.LENGTH_LONG).show();
             } else {
                 if(result.getContents().contains("-")
-                        && result.getContents().length() > 10) {
+                        // Car on a
+                        && result.getContents().length() > 22 && result.getContents().length() < 38) {
                     getServerInformation(result.getContents());
                     clientTask = new Client(this, ipserver);
                     clientTask.execute();
@@ -125,7 +155,7 @@ public class Login extends AppCompatActivity {
                 e.printStackTrace();
             }
         } else{
-            Toast.makeText(Login.this, "Login ou mot de passe non valide !", Toast.LENGTH_LONG).show();
+            Toast.makeText(Login.this, "Problème d'authentification, pensé à changer d'identifiant !", Toast.LENGTH_LONG).show();
         }
         connexionTask.cancel(true);
     }

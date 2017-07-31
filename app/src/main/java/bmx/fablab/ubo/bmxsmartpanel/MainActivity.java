@@ -27,16 +27,11 @@ import android.widget.Toast;
 import java.io.PrintWriter;
 
 import bmx.fablab.ubo.bmxsmartpanel.ServeurApplication.Emission;
+import bmx.fablab.ubo.bmxsmartpanel.Utilitaires.Property;
 
 public class MainActivity extends AppCompatActivity {
     /* Objets Réseaux */
     public Emission emissionTask;
-    /* Constants */
-    public static final String CONNECTED = "OK";
-    public static final String CHUTE = "CHUTE";
-    public static final String START = "START";
-    public static final String SERVERCLOSE = "CLOSE";
-    public static final String STOPCLIENT = "STOP";
     /* Autres */
     private Dialog dialog;
     private Button chut_button;
@@ -50,11 +45,19 @@ public class MainActivity extends AppCompatActivity {
     private boolean isConnected = false;
     /* Utilitaire */
     public static Handler messageHandler;
+    /* Constantes */
+    private Property property;
+    public static String CHUTE;
+    public static String START;
+    public static String SERVERCLOSE;
+    public static String STOPCLIENT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        property = new Property(this, "prop.properties");
+        loadProperty();
         chut_button = (Button) findViewById(R.id.chut_button);
         start_button = (Button) findViewById(R.id.start_button);
         alert_view = (TextView) findViewById(R.id.alert_view);
@@ -88,12 +91,13 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             //Log.e("FONT", fontName + " not found", e);
         }
+        /* Handle message */
         messageHandler = new Handler() {
             @Override
             public void handleMessage(Message msg){
                 identMessage = msg.getData().getString("id");
                 message = msg.getData().getString("msg");
-                if(MainActivity.SERVERCLOSE.equals(message)) {
+                if(SERVERCLOSE.equals(message)) {
                     // quand on arrete le serveur
                     Intent i = new Intent(MainActivity.this, Login.class);
                     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -109,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    private void loadProperty(){
+        CHUTE = property.getProperty("CHUTE");
+        START = property.getProperty("START");
+        SERVERCLOSE = property.getProperty("SERVERCLOSE");
+        STOPCLIENT = property.getProperty("STOPCLIENT");
+    }
     @Override
     protected void onResume() {
         super.onResume();
